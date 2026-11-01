@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nemox Lens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<script type="module">
+  // Material Web components (pinned). If the CDN is unreachable the page still works with plain styling.
+  import 'https://esm.run/@material/web@2.2.0/all.js';
+</script>
+<style>
+  :root {
+    --md-sys-color-primary: #3b5bdb; --md-sys-color-on-primary: #fff;
+    --bg: #f6f7fb; --surface: #fff; --text: #1b1e28; --muted: #5d6475; --line: #e3e6ef;
+    --high: #c92a2a; --med: #e8890c; --ok: #2b8a3e; --chip: #eef1fb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #12141b; --surface: #1b1e28; --text: #eceef6; --muted: #9aa2b8; --line: #2c3040; --chip: #262b3d;
+            --md-sys-color-primary: #9db4ff; --md-sys-color-on-primary: #101830; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Roboto, system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  .ms { font-family: 'Material Symbols Rounded'; font-weight: 400; font-style: normal; font-size: 24px; line-height: 1;
+        letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr;
+        -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga'; flex: none; user-select: none; }
+  .app { display: flex; gap: 16px; padding: 16px; align-items: flex-start; }
+  .nav { width: 288px; flex: none; background: var(--surface); border: 1px solid var(--line); border-radius: 28px;
+         padding: 12px; position: sticky; top: 16px; height: calc(100vh - 32px); display: flex; flex-direction: column;
+         transition: width .25s ease, transform .25s ease; overflow: hidden; z-index: 10; }
+  .nav-top { display: flex; align-items: center; gap: 8px; height: 56px; }
+  .burger { width: 48px; height: 48px; border-radius: 50%; border: 0; background: transparent; color: var(--text);
+            cursor: pointer; display: grid; place-items: center; flex: none; }
+  .burger:hover { background: var(--chip); }
+  .brand { font-size: 20px; font-weight: 500; white-space: nowrap; }
+  #navitems { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .item { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 14px; border-radius: 28px; border: 0;
+          background: transparent; color: var(--muted); cursor: pointer; font: inherit; font-size: 14px; font-weight: 500;
+          text-align: left; width: 100%; white-space: nowrap; }
+  .item:hover { background: var(--chip); }
+  .item.on { background: var(--chip); color: var(--md-sys-color-primary); }
+  .item.on .ms { font-variation-settings: 'FILL' 1; }
+  .item .label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .badge { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--high); color: #fff;
+           font-size: 12px; display: grid; place-items: center; }
+  .nav-foot { margin-top: auto; padding: 8px; font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .scrim { display: none; position: fixed; inset: 0; background: #0006; z-index: 9; }
+  .content { flex: 1; min-width: 0; max-width: 1040px; margin: 0 auto; padding-bottom: 48px; }
+  .topbar { display: none; align-items: center; gap: 8px; margin-bottom: 8px; }
+  @media (min-width: 841px) {
+    .nav.collapsed { width: 76px; }
+    .nav.collapsed .brand, .nav.collapsed .label, .nav.collapsed .nav-foot { display: none; }
+    .nav.collapsed .badge { position: absolute; margin: -22px 0 0 18px; min-width: 16px; height: 16px; font-size: 10px; padding: 0 4px; }
+    .nav.collapsed .item { padding: 0 14px; position: relative; }
+  }
+  @media (max-width: 840px) {
+    .app { padding: 12px; }
+    .nav { position: fixed; left: 12px; top: 12px; height: calc(100vh - 24px); transform: translateX(-120%); box-shadow: 0 8px 32px #0005; }
+    .nav.open { transform: none; }
+    .scrim.on { display: block; }
+    .topbar { display: flex; }
+  }
+  h1 { margin: 0; font-size: 26px; font-weight: 500; }
+  .sub { color: var(--muted); margin-top: 4px; font-size: 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 16px 0; }
+  .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+  .kpi b { display: block; font-size: 26px; font-weight: 500; }
+  .kpi span { color: var(--muted); font-size: 12px; }
+  md-tabs { --md-primary-tab-container-color: transparent; margin-bottom: 8px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin: 12px 0; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; font-weight: 500; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .chip { display: inline-block; padding: 3px 10px; border-radius: 8px; background: var(--chip); font-size: 12px; font-weight: 500; }
+  .chip.high { background: var(--high); color: #fff; } .chip.medium { background: var(--med); color: #fff; }
+  .chip.ok { background: var(--ok); color: #fff; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .kv { margin: 8px 0; font-size: 14px; line-height: 1.45; }
+  .kv b { font-weight: 500; }
+  .actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .spark { width: 100%; max-width: 360px; height: 70px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .mono { font-family: 'Roboto Mono', monospace; font-size: 12px; word-break: break-all; }
+  .ex { margin-top: 10px; overflow-x: auto; }
+  .email { white-space: pre-wrap; max-width: 420px; }
+  .modal { position: fixed; inset: 0; background: #0008; display: none; align-items: center; justify-content: center; padding: 16px; z-index: 5; }
+  .modal.on { display: flex; }
+  .slackbox { background: var(--surface); border-radius: 16px; max-width: 560px; width: 100%; padding: 20px; }
+  .slackmsg { border-left: 4px solid #4a154b; padding: 8px 12px; background: var(--bg); border-radius: 4px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+  md-filled-button:not(:defined), md-outlined-button:not(:defined), md-text-button:not(:defined), md-filled-tonal-button:not(:defined) {
+    display: inline-block; padding: 8px 14px; border: 1px solid var(--line); border-radius: 20px; cursor: pointer; }
+  .bar { height: 8px; background: var(--chip); border-radius: 4px; overflow: hidden; min-width: 90px; }
+  .bar i { display: block; height: 100%; background: var(--md-sys-color-primary); }
+  .rec { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 10px 14px; border-radius: 16px;
+         background: var(--chip); flex-wrap: wrap; }
+  .rec > div { flex: 1; min-width: 180px; }
+  .prev { border: 1px solid var(--line); border-radius: 16px; padding: 14px; background: var(--bg); font-size: 14px; line-height: 1.5; }
+  .prev .to { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .prev .fake { display: flex; gap: 8px; margin-top: 10px; }
+  .prev .fake span { padding: 6px 14px; border-radius: 16px; border: 1px solid var(--line); font-size: 13px; }
+  .prev .fake span.p { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); border-color: transparent; }
+  table.tight td, table.tight th { padding: 4px 8px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="nav" id="nav" aria-label="Main navigation">
+    <div class="nav-top">
+      <button class="burger" id="burger" aria-label="Toggle menu"><span class="ms">menu</span></button>
+      <span class="brand">Nemox Lens</span>
+    </div>
+    <nav id="navitems"></nav>
+    <div class="nav-foot">Demo data is synthetic, shaped like PostHog events + Logfire traces.</div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <div class="content">
+    <div class="topbar"><button class="burger" id="burger2" aria-label="Open menu"><span class="ms">menu</span></button></div>
+    <h1 id="title">Alerts</h1>
+    <div class="sub" id="subtitle"></div>
+    <div class="kpis" id="kpis"></div>
+    <div id="view"></div>
+  </div>
+</div>
+
+<div class="modal" id="modal"><div class="slackbox">
+  <h3 style="margin-top:0">Slack message preview</h3>
+  <div class="slackmsg" id="slackmsg"></div>
+  <div class="actions"><md-filled-button id="slackSend">Send to Slack</md-filled-button>
+    <md-text-button id="slackClose">Close</md-text-button></div>
+  <div class="muted" id="slackNote" style="margin-top:8px"></div>
+</div></div>
+
+<div class="modal" id="amodal"><div class="slackbox">
+  <h3 style="margin-top:0" id="atitle"></h3>
+  <div class="prev" id="abody"></div>
+  <div class="actions"><md-filled-button id="actDone">Mark as done</md-filled-button>
+    <md-text-button id="actClose">Close</md-text-button></div>
+  <div class="muted" style="margin-top:8px">Demo: nothing is sent to anyone. "Mark as done" records that the action was taken
+    (and accepts the rule into the rulebook).</div>
+</div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let D = null, tab = 'alerts', slackAlert = null;
+const TABS = [
+  ['alerts','Alerts','notifications','Things that changed: drifting rules and new kinds of requests.'],
+  ['rules','Candidate rules','rule','Unwritten rules mined from repeated rep corrections. Accept or reject each.'],
+  ['profiles','Customer profiles','groups','Which manual edits could be saved as defaults, and who should act on each.'],
+  ['unreported','Unreported cases','travel_explore','Bug reports matched to look-alike quotes that nobody reported.'],
+  ['rulebook','Rulebook','menu_book','Accepted rules in plain language, ready for the AI and for new hires.'],
+  ['clusters','RFQ groups','bubble_chart','Incoming requests grouped by text, with edit rates per group.'],
+];
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+};
+const isMobile = () => window.matchMedia('(max-width: 840px)').matches;
+
+async function load() {
+  D = await (await fetch('/api/analysis')).json();
+  renderKpis(); renderTabs(); render();
+}
+function renderKpis() {
+  const k = D.kpi, pct = x => Math.round(x*100) + '%';
+  $('#kpis').innerHTML = [
+    [k.events, 'quotes analysed'], [pct(k.unedited_base), 'unedited (baseline)'],
+    [pct(k.unedited_mon), 'unedited (recent)'], [pct(k.avoidable_edits), 'of manual edits could be avoided'],
+    [k.unreported, 'look-alike quotes never reported'], [k.rules, 'candidate rules found'], [k.alerts, 'open alerts'],
+  ].map(([v,l]) => `<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join('');
+}
+function renderTabs() {
+  $('#navitems').innerHTML = TABS.map(([id,l,icon]) => `<button class="item ${id===tab?'on':''}" data-t="${id}" title="${l}">
+      <span class="ms">${icon}</span><span class="label">${l}</span>${id==='alerts' && D.alerts.length ? `<span class="badge">${D.alerts.length}</span>` : ''}</button>`).join('');
+  $('#navitems').querySelectorAll('button').forEach(b => b.onclick = () => {
+    tab = b.dataset.t; renderTabs(); render(); closeMobile();
+  });
+}
+function closeMobile() { $('#nav').classList.remove('open'); $('#scrim').classList.remove('on'); }
+function toggleNav() {
+  const nav = $('#nav');
+  if (isMobile()) { nav.classList.toggle('open'); $('#scrim').classList.toggle('on', nav.classList.contains('open')); }
+  else { nav.classList.toggle('collapsed'); store.set('nav-collapsed', nav.classList.contains('collapsed') ? '1' : '0'); }
+}
+$('#burger').onclick = toggleNav;
+$('#burger2').onclick = toggleNav;
+$('#scrim').onclick = closeMobile;
+if (store.get('nav-collapsed') === '1') $('#nav').classList.add('collapsed');
+function spark(series, mark) {
+  if (!series || series.length < 2) return '';
+  const w = 360, h = 70, p = 8, xs = series.map(s => s.day), ys = series.map(s => s.value);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const X = v => p + (v - x0) / ((x1 - x0) || 1) * (w - 2*p), Y = v => h - p - (v - y0) / ((y1 - y0) || 1) * (h - 2*p);
+  const pts = series.map(s => `${X(s.day)},${Y(s.value)}`).join(' ');
+  const m = mark != null ? `<line x1="${X(mark)}" x2="${X(mark)}" y1="0" y2="${h}" stroke="#c92a2a" stroke-dasharray="3 3"/>` : '';
+  const dots = series.map(s => `<circle cx="${X(s.day)}" cy="${Y(s.value)}" r="3" fill="var(--md-sys-color-primary)"><title>day ${s.day}: ${s.value} (n=${s.n})</title></circle>`).join('');
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="var(--md-sys-color-primary)" stroke-width="2"/>${m}${dots}</svg>
+    <div class="muted">median correction per 5-day bucket${mark!=null?' · dashed line = detected change':''}</div>`;
+}
+function render() {
+  const v = $('#view');
+  const cur = TABS.find(t => t[0] === tab);
+  $('#title').textContent = cur[1];
+  $('#subtitle').textContent = cur[3];
+  if (tab === 'alerts') v.innerHTML = D.alerts.length ? D.alerts.map(alertCard).join('') : '<p class="muted">No alerts.</p>';
+  if (tab === 'rules') v.innerHTML = D.rules.map(ruleCard).join('');
+  if (tab === 'profiles') renderProfiles();
+  if (tab === 'unreported') renderUnreported();
+  if (tab === 'rulebook') renderRulebook();
+  if (tab === 'clusters') renderClusters();
+  v.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => toggleEx(b));
+  v.querySelectorAll('[data-dec]').forEach(b => b.onclick = () => decide(b.dataset.id, b.dataset.dec));
+  v.querySelectorAll('[data-slack]').forEach(b => b.onclick = () => openSlack(b.dataset.slack));
+  v.querySelectorAll('[data-act]').forEach(b => b.onclick = () => openAction(b.dataset.act));
+}
+function alertCard(a) {
+  const typeName = {rule_drift:'Rule drift', novel_inputs:'New input type', cluster_shift:'Edit-rate jump'}[a.type];
+  return `<div class="card" id="alert-${esc(a.id)}">
+    <div class="row"><span class="chip ${a.severity}">${esc(a.severity)}</span><span class="chip">${typeName}</span></div>
+    <h3>${esc(a.title)}</h3>
+    <div class="kv">${esc(a.summary)}</div>
+    ${a.series ? spark(a.series, a.since_day) : ''}
+    <div class="kv"><b>Likely cause:</b> ${esc(a.hypothesis)}</div>
+    <div class="kv"><b>Suggested fix:</b> ${esc(a.fix)}</div>
+    ${a.bug_reports && a.bug_reports.length ? `<div class="kv"><b>User bug reports:</b> ${a.bug_reports.map(b=>'“'+esc(b)+'”').join(' · ')}</div>` : ''}
+    ${candidateBox(a)}
+    ${recBox(a, 'alert:' + a.id)}
+    <div class="actions">
+      <md-filled-button data-ex="${esc(a.event_ids.join(','))}">Show evidence</md-filled-button>
+      <md-outlined-button data-slack="${esc(a.id)}">Preview Slack message</md-outlined-button>
+    </div><div class="ex"></div></div>`;
+}
+function ruleCard(r) {
+  const st = D.decisions[r.id];
+  const note = st ? `<span class="chip ${st==='accepted'?'ok':''}">${st}</span>` : '';
+  return `<div class="card">
+    <div class="row"><span class="chip">${esc(r.cause_class)}</span><span class="chip">${esc(r.label)}</span>${r.source?`<span class="chip">${esc(r.source)}</span>`:''}${r.drift?'<span class="chip high">drifting</span>':''}${note}</div>
+    <h3>${esc(r.statement)}</h3>
+    <div class="kv">Seen in <b>${r.n_edited}</b> of <b>${r.n}</b> matching quotes (${Math.round(r.rate*100)}%), vs ${Math.round(r.outside_rate*100)}% elsewhere.
+      <div class="bar"><i style="width:${Math.round(r.rate*100)}%"></i></div></div>
+    <div class="kv"><b>Why:</b> ${esc(r.cause)}</div>
+    <div class="kv"><b>Fix:</b> ${esc(r.fix)}</div>
+    ${r.bug_reports.length ? `<div class="kv"><b>User bug reports:</b> ${r.bug_reports.map(b=>'“'+esc(b)+'”').join(' · ')}</div>` : ''}
+    ${spark(r.series)}
+    ${recBox(r, 'rule:' + r.id)}
+    <div class="actions">
+      <md-filled-button data-dec="accepted" data-id="${esc(r.id)}">Accept into rulebook</md-filled-button>
+      <md-outlined-button data-dec="rejected" data-id="${esc(r.id)}">Reject</md-outlined-button>
+      <md-text-button data-ex="${esc(r.event_ids.slice(0,6).join(','))}">Examples</md-text-button>
+    </div><div class="ex"></div></div>`;
+}
+function renderRulebook() {
+  const acc = D.rules.filter(r => D.decisions[r.id] === 'accepted');
+  $('#view').innerHTML = `<div class="card"><h3>Rulebook</h3>
+    <p class="muted">Accepted rules, written in plain language. Feed this to the AI as context and give it to new hires.
+    <a href="/api/rulebook.md" target="_blank">Download as markdown</a></p>
+    ${acc.length ? '<ul>' + acc.map(r => `<li><b>${esc(r.statement)}</b><br><span class="muted">${r.n_edited}/${r.n} quotes · ${esc(r.cause_class)} · ${esc(r.cause)}</span></li>`).join('') + '</ul>' : '<p class="muted">Nothing accepted yet. Review the candidate rules.</p>'}</div>`;
+}
+function renderClusters() {
+  const pct = x => Math.round(x*100) + '%';
+  $('#view').innerHTML = `<div class="card"><h3>RFQ groups (clustering of email embeddings)</h3>
+    <p class="muted">Edit rates per group. “Unexplained” = edits no accepted-candidate rule covers.
+    Embeddings: <b>${esc(D.embedding.backend)}</b>, novelty score cut-off ${D.embedding.threshold} (1.0 = typical; set so about 1% of normal RFQs would exceed it).<br>Method: ${esc(D.embedding.method)}.
+    ${D.embedding.fallback_reason ? `<span class="chip high">fell back: ${esc(D.embedding.fallback_reason)}</span>` : ''}</p>
+    <table><tr><th>Group</th><th>Baseline n</th><th>Recent n</th><th>Unedited base→recent</th><th>Unexplained base→recent</th><th>z</th></tr>
+    ${D.clusters.map(c => `<tr><td>${esc(c.terms.slice(0,4).join(', '))}</td><td>${c.n_base}</td><td>${c.n_mon}</td>
+      <td>${pct(c.unedited_base)} → ${pct(c.unedited_mon)}</td><td>${pct(c.unexplained_base)} → ${pct(c.unexplained_mon)}</td><td>${c.z}</td></tr>`).join('')}
+    </table></div>`;
+}
+async function toggleEx(btn) {
+  const box = btn.closest('.card').querySelector('.ex');
+  if (box.innerHTML) { box.innerHTML = ''; return; }
+  const evs = await (await fetch('/api/events/' + btn.dataset.ex)).json();
+  box.innerHTML = `<table><tr><th>Day</th><th>RFQ email</th><th>What the rep changed</th><th>Links</th></tr>` + evs.map(e =>
+    `<tr><td>${e.day}</td><td class="email">${esc(e.email)}</td>
+     <td>${Object.entries(e.edits).map(([f,x]) => `<div><b>${esc(f)}</b>: ${esc(x.from)} → ${esc(x.to)}</div>`).join('')}${e.bug_report?`<div class="muted">bug report: “${esc(e.bug_report)}”</div>`:''}</td>
+     <td class="mono">${esc(e.trace_id)}<br>${esc(e.replay_id)}</td></tr>`).join('') + '</table>';
+}
+function actDone(key) { return D.decisions['action|' + key] === 'done'; }
+function candidateBox(a) {
+  if (!a.candidate_rule_id) return '';
+  const r = D.rules.find(x => x.id === a.candidate_rule_id);
+  if (!r) return '';
+  const done = D.decisions[r.id] === 'accepted';
+  return `<div class="rec" style="background:var(--chip)"><span class="ms">auto_fix_high</span>
+    <div><div class="kv" style="margin:0"><b>Fixable error found:</b> ${esc(r.statement)}</div>
+    <div class="muted">${r.n_edited} of ${r.n} quotes corrected the same way. Once a customer has history, this is a normal customer rule.</div></div>
+    ${done ? '<span class="chip ok">rule created</span>' : `<md-filled-button data-dec="accepted" data-id="${esc(r.id)}">Create customer rule</md-filled-button>`}</div>`;
+}
+function recBox(item, key) {
+  const a = item.action;
+  if (!a) return '';
+  return `<div class="rec"><span class="ms">${esc(a.icon)}</span>
+    <div><div class="kv" style="margin:0"><b>Recommended action:</b> ${esc(a.label)}</div><div class="muted">Goes to: ${esc(a.audience)}</div></div>
+    ${actDone(key) ? '<span class="chip ok">done</span>' : `<md-filled-tonal-button data-act="${esc(key)}">Preview &amp; send</md-filled-tonal-button>`}</div>`;
+}
+function itemFor(key) {
+  const i = key.indexOf(':'), t = key.slice(0, i), id = key.slice(i + 1);
+  if (t === 'journey') return D.journeys.find(j => j.id === id);
+  return t === 'rule' ? D.rules.find(r => r.id === id) : D.alerts.find(a => a.id === id);
+}
+let actKey = null;
+function openAction(key) {
+  actKey = key;
+  const a = itemFor(key).action;
+  $('#atitle').textContent = a.label;
+  const plugin = a.kind === 'add_to_profile';
+  $('#abody').innerHTML = `<div class="to">${plugin ? 'Shown to the rep inside the email plugin' : 'Message to: ' + esc(a.audience)}</div>
+    <div>${esc(a.message)}</div>
+    ${plugin ? '<div class="fake"><span class="p">Save as default</span><span>Not now</span></div>' : ''}`;
+  $('#actDone').style.display = actDone(key) ? 'none' : '';
+  $('#amodal').classList.add('on');
+}
+function renderUnreported() {
+  $('#view').innerHTML = `<p class="muted">Quotes are grouped by journey: what the request looked like and what the rep changed. A group that contains a bug report
+    but mostly unreported quotes shows how big the reported problem really is. These are look-alikes, so each one is a lead to check, not proof of a problem.</p>` +
+    (D.journeys.length ? D.journeys.map(j => `<div class="card">
+    <div class="row"><span class="chip medium">${j.n_unreported} never reported</span>${j.customers.map(c => `<span class="chip">${esc(c.name)} · ${c.n}</span>`).join('')}</div>
+    <h3>${esc(j.title)}</h3>
+    <div class="kv">${esc(j.summary)}</div>
+    <div class="row" style="gap:16px;margin:8px 0">
+      <div class="kpi" style="padding:10px 16px"><b>${j.n}</b><span>quotes corrected the same way</span></div>
+      <div class="kpi" style="padding:10px 16px"><b>${j.n_reported}</b><span>reported</span></div>
+      <div class="kpi" style="padding:10px 16px"><b>${j.n_unreported}</b><span>never reported</span></div>
+    </div>
+    <div class="kv"><b>Reports in this group:</b> ${j.reports.map(r => '“' + esc(r) + '”').join(' · ')}</div>
+    ${recBox(j, 'journey:' + j.id)}
+    <div class="actions"><md-filled-button data-ex="${esc(j.event_ids.join(','))}">Show unreported examples</md-filled-button></div>
+    <div class="ex"></div></div>`).join('') : '<p class="muted">No groups found.</p>');
+}
+function renderProfiles() {
+  const pct = x => Math.round(x * 100) + '%';
+  const cls = {gaps: 'medium', new: 'high', healthy: 'ok'}, lab = {gaps: 'Profile gaps', new: 'New customer', healthy: 'Healthy'};
+  $('#view').innerHTML = `<p class="muted">Profiles are per customer, not per rep: the point is to find knowledge the system is missing, not to monitor people.
+    “Judgement calls” are edits that do not repeat (e.g. negotiations) and should stay with the reps.</p>` + D.profiles.map(p => `<div class="card">
+    <div class="row"><span class="chip ${cls[p.status]}">${lab[p.status]}</span><span class="chip">${esc(p.tms)}</span></div>
+    <h3>${esc(p.customer)}</h3>
+    <div class="kv">${p.n} quotes · ${pct(p.edit_rate)} edited · ${p.n_edits} manual edits:
+      <b>${p.fixable_edits}</b> could be avoided by saving rules, <b>${p.judgement_edits}</b> look like judgement calls.
+      <div class="bar" title="share of edits that are codifiable"><i style="width:${pct(p.fixable_edits / Math.max(1, p.n_edits))}"></i></div></div>
+    <div class="muted">${esc(p.note)}</div>
+    ${p.rules.length ? `<div class="ex"><table class="tight"><tr><th>Repeated manual edit</th><th>Quotes</th><th>Recommended action</th><th></th></tr>` + p.rules.map(x => {
+      const key = 'rule:' + x.rule_id;
+      return `<tr><td>${esc(x.statement)}</td><td>${x.n_edited}/${x.n}</td><td>${esc(x.action.label)}<div class="muted">${esc(x.action.audience)}</div></td>
+        <td>${actDone(key) ? '<span class="chip ok">done</span>' : `<md-filled-tonal-button data-act="${esc(key)}">Preview</md-filled-tonal-button>`}</td></tr>`;
+    }).join('') + '</table></div>' : ''}</div>`).join('');
+}
+async function decide(id, decision) {
+  D.decisions = await (await fetch('/api/decision', {method:'POST', body: JSON.stringify({id, decision})})).json();
+  render();
+}
+function slackHtml(t) { return esc(t).replace(/\*([^*]+)\*/g,'<b>$1</b>').replace(/&lt;([^|]+)\|([^&]+)&gt;/g,'<u>$2</u>'); }
+async function openSlack(id) {
+  slackAlert = id;
+  const m = await (await fetch('/api/slack/' + encodeURIComponent(id))).json();
+  $('#slackmsg').innerHTML = slackHtml(m.text);
+  $('#slackNote').textContent = D.slack_configured ? 'SLACK_WEBHOOK_URL is set: this will post to that channel.' : 'Preview only. Set SLACK_WEBHOOK_URL (private test channel) to enable sending.';
+  $('#modal').classList.add('on');
+}
+document.addEventListener('click', async e => {
+  if (e.target.closest('#actClose') || e.target.id === 'amodal') $('#amodal').classList.remove('on');
+  if (e.target.closest('#actDone') && actKey) {
+    await decide('action|' + actKey, 'done');
+    if (actKey.startsWith('rule:')) await decide(actKey.slice(5), 'accepted');
+    $('#amodal').classList.remove('on');
+  }
+  if (e.target.closest('#slackClose') || e.target.id === 'modal') $('#modal').classList.remove('on');
+  if (e.target.closest('#slackSend')) {
+    const r = await (await fetch('/api/slack/send', {method:'POST', body: JSON.stringify({id: slackAlert})})).json();
+    $('#slackNote').textContent = r.sent ? 'Sent.' : (r.reason || 'Not sent.');
+  }
+});
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+# Python virtual environments
+.pyi/
+.venv/
+venv/
+env/
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Local state and secrets
+.env
+.env.*
+*.pid
+rulemine/decisions.json
+
+# Node (if a frontend is added later)
+node_modules/
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+*.log
+
+# Embedding cache
+rulemine/.embed_cache.json
